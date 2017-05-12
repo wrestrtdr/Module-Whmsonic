@@ -28,4 +28,5 @@ disabled:
 
 finder:
  name:
+  - "*.php"
   - "*.pdt"
