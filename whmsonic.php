@@ -13,7 +13,7 @@ class Whmsonic extends Module
     /**
      * @var string The version of this module
      */
-    private static $version = '1.0.0';
+    private static $version = '1.0.1';
     /**
      * @var string The authors of this module
      */
@@ -43,9 +43,9 @@ class Whmsonic extends Module
     }
 
     /**
-     * Returns the version of this gateway.
+     * Returns the version of this module.
      *
-     * @return string The current version of this gateway
+     * @return string The current version of this module
      */
     public function getVersion()
     {
@@ -264,7 +264,7 @@ class Whmsonic extends Module
         return [
             'module' => ['ip_address'],
             'package' => ['client_type', 'bitrate', 'hspace', 'bandwidth', 'listeners', 'autodj'],
-            'service' => ['username', 'password']
+            'service' => ['whmsonic_username', 'whmsonic_password', 'whmsonic_ip_address', 'whmsonic_port', 'whmsonic_ftp', 'whmsonic_radio_ip', 'whmsonic_radio_password']
         ];
     }
 
@@ -521,7 +521,7 @@ class Whmsonic extends Module
     public function getServiceName($service)
     {
         foreach ($service->fields as $field) {
-            if ($field->key == 'username') {
+            if ($field->key == 'whmsonic_username') {
                 return $field->value;
             }
         }
@@ -541,8 +541,8 @@ class Whmsonic extends Module
      */
     public function getPackageServiceName($package, array $vars = null)
     {
-        if (isset($vars['username'])) {
-            return $vars['username'];
+        if (isset($vars['whmsonic_username'])) {
+            return $vars['whmsonic_username'];
         }
 
         return null;
@@ -626,7 +626,7 @@ class Whmsonic extends Module
      * @param bool $edit True if this is an edit, false otherwise
      * @return bool True if the service validates, false otherwise. Sets Input errors when false.
      */
-    public function ServiceValidation($package, array $vars = null, $edit = false)
+    public function serviceValidation($package, array $vars = null, $edit = false)
     {
         $rules = [
             'username' => [
@@ -673,6 +673,7 @@ class Whmsonic extends Module
     {
         $row = $this->getModuleRow();
         $params = [];
+
         if (!$row) {
             $this->Input->setErrors(['module_row' => ['missing' => Language::_('Whmsonic.!error.module_row.missing', true)]]);
 
@@ -699,7 +700,7 @@ class Whmsonic extends Module
         $params['bandwidth'] = $package->meta->bandwidth;
         $params['listeners'] = $package->meta->listeners;
 
-        $this->ServiceValidation($package, $params);
+        $this->serviceValidation($package, $params);
 
         if ($this->Input->errors()) {
             return;
@@ -709,13 +710,8 @@ class Whmsonic extends Module
         if ($vars['use_module'] == 'true') {
             $api = $this->getApi($row->meta->password, $row->meta->ip_address, $row->meta->use_ssl);
 
-            $response = $api->createRadio($params, $package->meta->client_type);
-            $this->log($row->meta->ip_address . '|create', serialize($response), 'input', $response['status']);
-
-            // If fails then set an error
-            if ($response['status'] == false) {
-                $this->Input->setErrors(['api_response' => ['missing' => Language::_('Whmsonic.!error.api.internal', true)]]);
-            }
+            $this->log($row->meta->ip_address . '|create', serialize($params), 'input');
+            $response = $this->parseResponse($api->createRadio($params, $package->meta->client_type));
 
             if ($this->Input->errors()) {
                 return;
@@ -725,15 +721,40 @@ class Whmsonic extends Module
         // Return service fields
         return [
             [
-                'key' => 'username',
+                'key' => 'whmsonic_username',
                 'value' => $params['username'],
                 'encrypted' => 0
             ],
             [
-                'key' => 'password',
+                'key' => 'whmsonic_password',
                 'value' => $params['pass'],
                 'encrypted' => 1
             ],
+            [
+                'key' => 'whmsonic_ip_address',
+                'value' => $row->meta->ip_address,
+                'encrypted' => 0
+            ],
+            [
+                'key' => 'whmsonic_port',
+                'value' => ($row->meta->use_ssl ? '2083' : '2082'),
+                'encrypted' => 0
+            ],
+            [
+                'key' => 'whmsonic_ftp',
+                'value' => $api->ftpAccountPermissions($row->meta->ip_address, $params['username'], $params['pass']),
+                'encrypted' => 0
+            ],
+            [
+                'key' => 'whmsonic_radio_ip',
+                'value' => $row->meta->ip_address,
+                'encrypted' => 1
+            ],
+            [
+                'key' => 'whmsonic_radio_password',
+                'value' => $params['pass'],
+                'encrypted' => 1
+            ]
         ];
     }
 
@@ -755,7 +776,8 @@ class Whmsonic extends Module
      */
     public function editService($package, $service, array $vars = null, $parent_package = null, $parent_service = null)
     {
-        $this->ServiceValidation($package, $vars, true);
+        $row = $this->getModuleRow();
+        $this->serviceValidation($package, $vars, true);
 
         if ($this->Input->errors()) {
             return;
@@ -763,25 +785,56 @@ class Whmsonic extends Module
 
         $service_fields = $this->serviceFieldsToObject($service->fields);
 
-        if (empty($vars['username']) || $service_fields->username == $vars['username']) {
-            $vars['username'] = $service_fields->username;
+        $vars['bitrate'] = $package->meta->bitrate;
+        $vars['hspace'] = $package->meta->hspace;
+        $vars['autodj'] = $package->meta->autodj;
+        $vars['bandwidth'] = $package->meta->bandwidth;
+        $vars['listeners'] = $package->meta->listeners;
+
+        if (empty($vars['username']) || $service_fields->whmsonic_username == $vars['username']) {
+            $vars['username'] = $service_fields->whmsonic_username;
         }
-        if (empty($vars['password']) || $service_fields->user_password == $vars['password']) {
-            $vars['password'] = $service_fields->password;
+        if (empty($vars['password']) || $service_fields->whmsonic_password == $vars['password']) {
+            $vars['password'] = $service_fields->whmsonic_password;
         }
 
         // Return service fields
         return [
             [
-                'key' => 'username',
+                'key' => 'whmsonic_username',
                 'value' => $vars['username'],
                 'encrypted' => 0
             ],
             [
-                'key' => 'password',
-                'value' => $vars['password'],
+                'key' => 'whmsonic_password',
+                'value' => $vars['pass'],
                 'encrypted' => 1
             ],
+            [
+                'key' => 'whmsonic_ip_address',
+                'value' => $service_fields->whmsonic_ip_address,
+                'encrypted' => 0
+            ],
+            [
+                'key' => 'whmsonic_port',
+                'value' => $service_fields->whmsonic_port,
+                'encrypted' => 0
+            ],
+            [
+                'key' => 'whmsonic_ftp',
+                'value' => $service_fields->whmsonic_ftp,
+                'encrypted' => 0
+            ],
+            [
+                'key' => 'whmsonic_radio_ip',
+                'value' => $service_fields->whmsonic_radio_ip,
+                'encrypted' => 1
+            ],
+            [
+                'key' => 'whmsonic_radio_password',
+                'value' => $service_fields->whmsonic_radio_password,
+                'encrypted' => 1
+            ]
         ];
     }
 
@@ -807,7 +860,7 @@ class Whmsonic extends Module
 
             $api = $this->getApi($row->meta->password, $row->meta->ip_address, $row->meta->use_ssl);
 
-            $response = $api->suspendRadio($service_fields->username);
+            $response = $api->suspendRadio($service_fields->whmsonic_username);
             $this->log($row->meta->ip_address . '|suspend', serialize($response), 'input', $response['status']);
 
             // if fails then set an error
@@ -843,7 +896,7 @@ class Whmsonic extends Module
 
             $api = $this->getApi($row->meta->password, $row->meta->ip_address, $row->meta->use_ssl);
 
-            $response = $api->unSuspendRadio($service_fields->username);
+            $response = $api->unSuspendRadio($service_fields->whmsonic_username);
             $this->log($row->meta->ip_address . '|unsuspend', serialize($response), 'input', $response['status']);
 
             // if fails then set an error
@@ -879,7 +932,7 @@ class Whmsonic extends Module
 
             $api = $this->getApi($row->meta->password, $row->meta->ip_address, $row->meta->use_ssl);
 
-            $response = $api->terminateRadio($service_fields->username);
+            $response = $api->terminateRadio($service_fields->whmsonic_username);
             $this->log($row->meta->ip_address . '|terminate', serialize($response), 'input', $response['status']);
 
             // if fails then set an error
@@ -1019,6 +1072,33 @@ class Whmsonic extends Module
         $username = substr(str_replace(' ', '', strtolower($name)), 0, 2) . $pool[(rand(0, 35))] . $pool[(rand(0, 35))];
 
         return 'sc_' . $username;
+    }
+
+    /**
+     * Parses the response from the API into a stdClass object.
+     *
+     * @param stdClass $response The response from the API
+     * @return stdClass A stdClass object representing the response, void if the response was an error
+     */
+    private function parseResponse($response)
+    {
+        $row = $this->getModuleRow();
+        $success = true;
+
+        if ($response['status'] == false) {
+            $this->Input->setErrors(['api' => ['error' => Language::_('Whmsonic.!error.api.internal', true)]]);
+            $success = false;
+        }
+
+        // Log the response
+        $this->log($row->meta->ip_address, serialize($response), 'output', $success);
+
+        // Return if any errors encountered
+        if (!$success) {
+            return;
+        }
+
+        return $response;
     }
 
     /**

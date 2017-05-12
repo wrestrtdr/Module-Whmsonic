@@ -3,7 +3,7 @@
  * en_us language for the Whmsonic module.
  */
 // Basics
-$lang['Whmsonic.name'] = 'Whmsonic';
+$lang['Whmsonic.name'] = 'WHMSonic';
 $lang['Whmsonic.module_row'] = 'Server';
 $lang['Whmsonic.module_row_plural'] = 'Servers';
 $lang['Whmsonic.module_group'] = 'Server Group';
@@ -29,6 +29,7 @@ $lang['Whmsonic.add_module_group'] = 'Add Server Group';
 $lang['Whmsonic.manage.module_rows_title'] = 'Servers';
 $lang['Whmsonic.manage.module_groups_title'] = 'Server Groups';
 $lang['Whmsonic.manage.module_rows_heading.name'] = 'Server Label';
+$lang['Whmsonic.manage.module_rows_heading.ip_address'] = 'IP Address';
 $lang['Whmsonic.manage.module_rows_heading.hostname'] = 'Hostname';
 $lang['Whmsonic.manage.module_rows_heading.port'] = 'Port';
 $lang['Whmsonic.manage.module_rows_heading.accounts'] = 'Accounts';
@@ -49,7 +50,7 @@ $lang['Whmsonic.manage.module_groups_no_results'] = 'There are no server groups.
 $lang['Whmsonic.order_options.first'] = 'First non-full server';
 
 // Add row
-$lang['Whmsonic.add_row.box_title'] = 'Add Whmsonic Server';
+$lang['Whmsonic.add_row.box_title'] = 'Add WHMSonic Server';
 $lang['Whmsonic.add_row.basic_title'] = 'Basic Settings';
 $lang['Whmsonic.add_row.name_servers_title'] = 'Name Servers';
 $lang['Whmsonic.add_row.notes_title'] = 'Notes';
@@ -60,7 +61,7 @@ $lang['Whmsonic.add_row.name_server'] = 'Name server %1$s'; // %1$s is the name 
 $lang['Whmsonic.add_row.remove_name_server'] = 'Remove';
 $lang['Whmsonic.add_row.add_btn'] = 'Add Server';
 
-$lang['Whmsonic.edit_row.box_title'] = 'Edit Whmsonic Server';
+$lang['Whmsonic.edit_row.box_title'] = 'Edit WHMSonic Server';
 $lang['Whmsonic.edit_row.basic_title'] = 'Basic Settings';
 $lang['Whmsonic.edit_row.name_servers_title'] = 'Name Servers';
 $lang['Whmsonic.edit_row.notes_title'] = 'Notes';
@@ -97,7 +98,7 @@ $lang['Whmsonic.service_field.password.tooltip'] = 'The password will only be up
 
 // Service info
 $lang['Whmsonic.stored_locally_only'] = 'This field will be updated locally only';
-$lang['Whmsonic.service_info.hostname'] = 'Hostname';
+$lang['Whmsonic.service_info.ip_address'] = 'IP Address';
 $lang['Whmsonic.service_info.username'] = 'Username';
 $lang['Whmsonic.service_info.password'] = 'Password';
 $lang['Whmsonic.service_info.server'] = 'Server';

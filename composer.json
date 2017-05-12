@@ -1,6 +1,6 @@
 {
     "name": "blesta/whmsonic",
-    "description": "Whmsonic",
+    "description": "WHMsonic",
     "license": "proprietary",
     "type": "blesta-module",
     "require": {

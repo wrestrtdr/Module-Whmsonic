@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Whmsonic API.
  *
@@ -17,6 +16,7 @@ class WhmsonicApi
 
     /**
      * Initializes the class.
+     *
      * @param mixed $password
      * @param mixed $ip_address
      * @param mixed $use_ssl
@@ -30,6 +30,7 @@ class WhmsonicApi
 
     /**
      * Return a string containing the last error for the current session.
+     *
      * @param string $command the Vesta API command to call
      * @param array $params the parameters to include in the API request
      * @return mixed string|Array the curl error message or an array representing the API response
@@ -75,6 +76,7 @@ class WhmsonicApi
 
     /**
      * Creates a user account.
+     *
      * @param array $params an array of parameters
      * @param string $type specifies whether the account is 'internal' or 'External'
      * @return array an array representing the status of the operation
@@ -127,6 +129,7 @@ class WhmsonicApi
 
     /**
      * Suspends a user account.
+     *
      * @param string $username the account's username to suspend
      * @return array an array representing the status of the operation
      */
@@ -149,6 +152,7 @@ class WhmsonicApi
 
     /**
      * Un-suspends a user account.
+     *
      * @param string $username the account's username to un-suspend
      * @return array an array representing the status of the operation
      */
@@ -170,7 +174,8 @@ class WhmsonicApi
     }
 
     /**
-     * terminates a user account.
+     * Terminates a user account.
+     *
      * @param string $username the account's username to terminate
      * @return array an array representing the status of the operation
      */
@@ -189,5 +194,28 @@ class WhmsonicApi
             'status' => $status,
             'response' => $response,
         ];
+    }
+
+    /**
+     * Check if a FTP account is enabled.
+     *
+     * @param $ip_address The server ip address
+     * @param $username The account username
+     * @param $password The account password
+     * @return string Returns "yes" if the account is enabled, otherwise returns "no"
+     */
+    public function ftpAccountPermissions($ip_address, $username, $password)
+    {
+        $conn_id = @ftp_connect($ip_address);
+
+        if (@ftp_login($conn_id, $username, $password)) {
+            $result = 'yes';
+        } else {
+            $result = 'no';
+        }
+
+        ftp_close($conn_id);
+
+        return $result;
     }
 }
