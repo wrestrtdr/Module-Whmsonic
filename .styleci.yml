@@ -12,7 +12,6 @@ enabled:
  - no_extra_block_blank_lines
  - no_empty_comment
  - phpdoc_order
- - phpdoc_link_to_see
  - phpdoc_add_missing_param_annotation
 
 disabled:
